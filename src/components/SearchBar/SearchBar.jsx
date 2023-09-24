@@ -21,16 +21,15 @@ export default class SearchBar extends Component {
     return (
       <Searchbar>
         <SearchForm onSubmit={this.handleSubmitForm}>
-          <button type="submit">
-            <span>Search</span>
-          </button>
-
           <Input
             type="text"
             placeholder="Search images and photos"
             value={this.state.imageName}
             onChange={this.onChangeInput}
           />
+          <button type="submit">
+            <span>Search</span>
+          </button>
         </SearchForm>
       </Searchbar>
     );

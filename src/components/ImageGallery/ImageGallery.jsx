@@ -1,13 +1,11 @@
 import { Component } from 'react';
 import { fetchPixabayImg } from 'services/pixabay-api';
 import ImageGalleryItem from 'components/ImageGalleryItem';
-// import * as basicLightbox from 'basiclightbox';
-
 import { GalleryList } from './ImageGallery.styled';
-import { animateScroll } from 'react-scroll';
 import LoadMore from 'components/LoadMore/LoadMore';
 import Loader from 'components/Loading/Loading';
 import Modal from 'components/Modal/Modal';
+import { scrollToBottom } from 'utils/scroll';
 
 const STATUS = {
   IDLE: 'idle',
@@ -22,7 +20,10 @@ export default class ImageGallery extends Component {
     page: 1,
     status: IDLE,
     showModal: false,
-    photo: null,
+    photo: '',
+    totalImages: 0,
+    loadMore: false,
+    error: '',
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -31,7 +32,12 @@ export default class ImageGallery extends Component {
     const prevName = prevProps.imageName;
     const prevPage = prevState.page;
 
-    if (prevName !== imageName || prevPage !== page) {
+    if (prevName !== imageName) {
+      this.setState({ images: [] });
+      this.fetchPixabayImg(imageName);
+    }
+
+    if (prevPage !== page && this.state.status === RESOLVED) {
       this.fetchPixabayImg(imageName, page);
     }
   }
@@ -39,27 +45,28 @@ export default class ImageGallery extends Component {
   fetchPixabayImg = async (name, page) => {
     this.setState({ status: PENDING });
     if (!name) return;
-
     try {
-      const { hits } = await fetchPixabayImg(name, page);
+      const { hits, totalHits } = await fetchPixabayImg(name, page);
+
       this.setState(prevState => ({
         images: [...prevState.images, ...hits],
+        loadMore: this.state.page < Math.ceil(totalHits / 12),
         status: RESOLVED,
+        totalImages: prevState.totalImages + hits.length,
       }));
-    } catch (err) {}
+
+      if (totalHits === 0) {
+        return await Promise.reject(new Error('Please write correct name'));
+      }
+    } catch (err) {
+      this.setState({ status: REJECTED, error: err.message });
+      console.log(err.message);
+    }
   };
 
   onClickBtn = () => {
     this.setState(prevState => ({ page: prevState.page + 1 }));
-    this.scrollToBottom();
-  };
-
-  scrollToBottom = () => {
-    animateScroll.scrollToBottom({
-      duration: 2000,
-      delay: 10,
-      smooth: 'linear',
-    });
+    scrollToBottom();
   };
 
   toggleModal = photo => {
@@ -68,23 +75,27 @@ export default class ImageGallery extends Component {
       photo,
     }));
   };
+
   render() {
-    const { status, images, showModal, photo } = this.state;
-    console.log(images);
+    const { status, error, showModal, photo, loadMore } = this.state;
     if (status === IDLE) {
-      return <h1>Search</h1>;
+      return <h2>Please enter a picture name</h2>;
     }
 
     if (status === RESOLVED) {
       return (
-        <GalleryList>
-          <ImageGalleryItem
-            data={this.state.images}
-            onShow={this.toggleModal}
-          />
-          {showModal && <Modal photo={photo} />}
-          <LoadMore onClick={this.onClickBtn} />
-        </GalleryList>
+        <>
+          <h2>Result "{this.props.imageName}"</h2>
+          <GalleryList>
+            <ImageGalleryItem
+              data={this.state.images}
+              onShow={this.toggleModal}
+            />
+          </GalleryList>
+          {loadMore && <LoadMore onClick={this.onClickBtn} />}
+          {!loadMore && <p>The pictures in this section have run out 😒😒 </p>}
+          {showModal && <Modal photo={photo} onShow={this.toggleModal} />}
+        </>
       );
     }
     if (status === PENDING) {
@@ -92,7 +103,7 @@ export default class ImageGallery extends Component {
     }
 
     if (status === REJECTED) {
-      return <h1>error</h1>;
+      return <h2>{error}</h2>;
     }
   }
 }

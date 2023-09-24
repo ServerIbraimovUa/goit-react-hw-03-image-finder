@@ -6,19 +6,17 @@ import { AppS } from './App.styled';
 export default class App extends Component {
   state = {
     imageName: '',
-    page: 1,
-    images: [],
   };
 
   getValuesForm = val => {
-    this.setState({ imageName: val, page: 1, images: [] });
+    this.setState({ imageName: val });
   };
 
   render() {
     return (
       <AppS>
         <SearchBar onSubmit={this.getValuesForm} />
-        <ImageGallery imageName={this.state.imageName} page={this.state.page} />
+        <ImageGallery imageName={this.state.imageName} />
       </AppS>
     );
   }

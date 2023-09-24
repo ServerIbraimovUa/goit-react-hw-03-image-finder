@@ -1,10 +1,12 @@
-const Modal = photo => {
+import { Overlay } from './Modal.styled';
+
+const Modal = ({ photo, onShow }) => {
   return (
-    <div class="overlay">
-      <div class="modal">
-        <img src={photo} alt="" />
+    <Overlay onClick={onShow}>
+      <div>
+        <img src={photo} alt="fcd" width="900" height="700" />
       </div>
-    </div>
+    </Overlay>
   );
 };
 
