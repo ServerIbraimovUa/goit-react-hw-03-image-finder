@@ -69,11 +69,15 @@ export default class ImageGallery extends Component {
     scrollToBottom();
   };
 
-  toggleModal = photo => {
+  openModal = photo => {
     this.setState(({ showModal }) => ({
       showModal: !showModal,
       photo,
     }));
+  };
+
+  closeModal = () => {
+    this.setState({ showModal: false });
   };
 
   render() {
@@ -89,12 +93,12 @@ export default class ImageGallery extends Component {
           <GalleryList>
             <ImageGalleryItem
               data={this.state.images}
-              onShow={this.toggleModal}
+              openModal={this.openModal}
             />
           </GalleryList>
           {loadMore && <LoadMore onClick={this.onClickBtn} />}
           {!loadMore && <p>The pictures in this section have run out 😒😒 </p>}
-          {showModal && <Modal photo={photo} onShow={this.toggleModal} />}
+          {showModal && <Modal photo={photo} closeModal={this.closeModal} />}
         </>
       );
     }
